@@ -12,3 +12,28 @@ Ofcourse its not for perfectionism, Its main purpose is to halp me to have clari
 - if previous day I didn't work, ask me to explain why I was away (also save this information in json file)  
 - show a progress bar that I have acheive for example 50 percent of my goal  
 - have env directory for required modules (run every where)
+
+
+# How to run:  
+This project requires several modules. You have two options:  
+    - Option 1 --> use project environment  
+    - Option 2 --> install required module in your system  
+After installing required modules run `python src/main.py`  
+
+## Option 1 (use project environment)  
+You can activate Python environment that contains modules
+```bash
+source env/bin/activate
+```
+
+```Powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\env\bin\Activate.ps1
+```
+
+## Option 2 (install required modules in your system)
+You can install them with requirement.txt file.  
+```bash
+pip install -r requirements.txt
+```
+
