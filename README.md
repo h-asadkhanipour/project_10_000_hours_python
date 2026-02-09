@@ -22,18 +22,18 @@ After installing required modules run `python src/main.py`
 
 ## Option 1 (use project environment)  
 You can activate Python environment that contains modules
-```bash
+``` bash
 source env/bin/activate
 ```
 
-```Powershell
+``` Powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\env\bin\Activate.ps1
 ```
 
 ## Option 2 (install required modules in your system)
 You can install them with requirement.txt file.  
-```bash
+``` bash
 pip install -r requirements.txt
 ```
 
