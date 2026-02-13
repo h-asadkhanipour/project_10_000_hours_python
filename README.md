@@ -15,25 +15,29 @@ Ofcourse its not for perfectionism, Its main purpose is to halp me to have clari
 
 
 # How to run:  
-This project requires several modules. You have two options:  
-    - Option 1 --> use project environment  
-    - Option 2 --> install required module in your system  
-After installing required modules run `python src/main.py`  
+You can this project in CLI and with streamlit dashboard. 
+After installing required modules and activating env:
+- Run in CLI `python src/main.py`  
+- Run in terminal `streamlit run src/streamlit_app.py`
 
-## Option 1 (use project environment)  
-You can activate Python environment that contains modules
+This project requires several modules. You have two options to install third-party packages:  
+    - Option 1 --> use Python environment manager
+    - Option 2 --> use Conda environment manager
+
+## Option 1 (use Python environment manager)  
+- 1 create new environment `python -m venv env`  
+- 2 activate project enviromnet:(you should see (env) in left side of your terminal)
+for unix users:  
 ``` bash
 source env/bin/activate
 ```
-
+for windows power shell users:  
 ``` Powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\env\bin\Activate.ps1
 ```
-
-## Option 2 (install required modules in your system)
-You can install them with requirement.txt file.  
-``` bash
-pip install -r requirements.txt
-```
-
+- 3 install required modules `pip install -r requirements.txt`  
+## Option 2 (use Conda environment manager)
+- 1 create new enviroment `conda create -n env`  
+- 2 activate conda environment `conda actiavte env`  
+- 3 install required modules `pip install -r requirements.txt`  
