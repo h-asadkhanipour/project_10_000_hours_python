@@ -1,18 +1,37 @@
 import subprocess
 from datetime import datetime
 from datetime import timedelta
+import os
 
-import streamlit as st
 import openpyxl
 
 
 class TenThousandHoursPython:
     def __init__(self):
+        self.clear_screen()
+        self.print_header()
+        self.load_create_excel_file()
         self.today = datetime.today()
         self.years = [i for i in range(self.today.year, self.today.year + 5)]
+        self.achievement() 
+        self.get_today_report()
+        self.show_progress()
+
+    def clear_screen(self):
+        os.system('cls' if os.__name__ == 'nt' else 'clear')
+    
+    def print_header(self):
+        print('******************************************')
+        print('***  Ten Thousand hours Python project ***')
+        print('******************************************')
+        print()
+    
+    def load_create_excel_file(self):
         try:
             self.excel_file = openpyxl.load_workbook('data/daily_time_log.xlsx')
             print('Reports Excel file loaded')
+            print('******************************************')
+            print()
         except FileNotFoundError:
             dirs = subprocess.check_output('ls -d */', shell=True, text=True)
             if 'data/' not in dirs:
@@ -20,15 +39,16 @@ class TenThousandHoursPython:
             self.excel_file = self.create_workbook()
             self.excel_file.save('data/daily_time_log.xlsx')
             print('New reports Excel file created')
+            print('******************************************')
+            print()
         self.excel_file.save('data/daily_time_log.xlsx')
     
     def achievement(self):
-        years = self.years
         self.first_day = None
         # calculate for each year
         achievement_hours = 0   # accumolates after each year iteration
         self.total_days = 0          # accumolates after each year iteration
-        for year in years:
+        for year in self.years:
             sheet = self.excel_file[f'{year}_report']
             non_empty_cells = []
             # find non-empty cells
@@ -54,7 +74,7 @@ class TenThousandHoursPython:
             sheet['F7'] = sheet['F5'].value / 30                    # months to end
             sheet['F8'] = sheet['F5'].value / 365                   # years to end
             # if this year achieve move hours, then recalculate celebration day
-            if year == years[0]:
+            if year == self.years[0]:
                 sheet['F9'] = (sheet[f'A{last_report_day}'].value + timedelta(sheet['F5'].value)).date()  # last celebration day based on accumolated hours
             elif self.excel_file[f'{year}_report']['F1'].value > self.excel_file[f'{year - 1}_report']['F1'].value:
                 sheet['F9'] = (sheet[f'A{last_report_day}'].value + timedelta(sheet['F5'].value)).date()  # last celebration day based on accumolated hours
@@ -68,13 +88,16 @@ class TenThousandHoursPython:
         self.weeks_to_end = self.days_to_end / 7
         self.months_to_end = self.days_to_end / 30
         self.years_to_end = self.days_to_end / 365
-        self.celebration_day = self.excel_file[f'{max(years)}_report']['F9'].value # last year, last result
+        self.celebration_day = self.excel_file[f'{max(self.years)}_report']['F9'].value # last year, last result
         self.excel_file.save('data/daily_time_log.xlsx')
 
     def get_user_input(self):
         # get valid study or work hour
         while True:
             study_hours = input('How much did you study/work Python? ')
+            if study_hours == '':
+                self.study_hours = ''
+                break
             try:
                 float(study_hours)
             except ValueError:
@@ -95,23 +118,43 @@ class TenThousandHoursPython:
             print('Line shows 60 chracter length')
             print('*' * 60)
             explanation = input()
+            if explanation == '':
+                self.explanation = ''
+                break
             if len(explanation) <= 60:
                 self.explanation = explanation
                 break
     
-    def today_report(self):
+    def get_today_report(self):
         self.get_user_input()
         # find excel cell according to today and update its time
-        sheet = self.excel_file[f'{self.today.year}_report']
-        for cell in range(2,368):
-            if str(self.today.date()) in str(sheet[f'A{cell}'].value):
-                # if study hour is None , new value assign to it, else add to previous one 
-                if sheet[f'B{cell}'].value == None:
-                    sheet[f'B{cell}'] = float(self.study_hours)
-                else:
-                    sheet[f'B{cell}'] = sheet[f'B{cell}'].value + float(self.study_hours)
-                sheet[f'C{cell}'] = self.explanation
-        self.excel_file.save('data/daily_time_log.xlsx')
+        if self.study_hours != '' and self.explanation != '':
+            sheet = self.excel_file[f'{self.today.year}_report']
+            for cell in range(2,368):
+                if str(self.today.date()) in str(sheet[f'A{cell}'].value):
+                    # if study hour is None , new value assign to it, else add to previous one 
+                    if sheet[f'B{cell}'].value == None:
+                        sheet[f'B{cell}'] = float(self.study_hours)
+                    else:
+                        sheet[f'B{cell}'] = sheet[f'B{cell}'].value + float(self.study_hours)
+                    sheet[f'C{cell}'] = self.explanation
+            self.excel_file.save('data/daily_time_log.xlsx')
+    
+    def show_progress(self):
+        print()
+        print()
+        print('Your pregress is:', self.achievement_percent)
+        print('You have achieved:', self.achievement_hours, 'hours')
+        print()
+        print('You have started this project in:', self.first_day.date())
+        print('You have Studied/Worked for', self.total_days, 'days')
+        print('Your mean Study/Work hours is:', self.mean_hours_per_day)
+        print()
+        print('Estimated days to achieve your goal:', self.days_to_end, 'days')
+        print('Estimated weeks to achieve your goal:', self.weeks_to_end, 'weeks')
+        print('Estimated months to achieve your goal:', self.months_to_end, 'months')
+        print('Estimated years to achieve your goal:', self.years_to_end, 'years')
+        print('Based on your average study hours, celebration day would be:', self.celebration_day)
 
     def create_workbook(self):
         # create a new workbook
@@ -157,18 +200,4 @@ class TenThousandHoursPython:
 
 
 if __name__ == '__main__':
-   obj = TenThousandHoursPython()
-   obj.achievement()
-   obj.today_report() 
-   print('\n\nYour pregress is:', obj.achievement_percent)
-   print('You have achieved:', obj.achievement_hours, 'hours')
-   print('')
-   print('You have started this project in:', obj.first_day.date())
-   print('You have Studied/Worked for', obj.total_days, 'days')
-   print('Your mean Study/Work hours is:', obj.mean_hours_per_day)
-   print('')
-   print('Estimated days to achieve your goal:', obj.days_to_end, 'days')
-   print('Estimated weeks to achieve your goal:', obj.weeks_to_end, 'weeks')
-   print('Estimated months to achieve your goal:', obj.months_to_end, 'months')
-   print('Estimated years to achieve your goal:', obj.years_to_end, 'years')
-   print('Based on your average study hours, celebration day would be:' ,obj.celebration_day)
+   TenThousandHoursPython()

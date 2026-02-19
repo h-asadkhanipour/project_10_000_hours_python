@@ -1,14 +1,14 @@
-
 import subprocess
 from datetime import datetime
 from datetime import timedelta
+import os
 
 import streamlit as st
 import openpyxl
 
 
-app_title ='''
-# The idea is this:  
+APP_TITLE ='''
+The idea is this:  
 If you spend about **10,000 hours** practicing a skill in a focused, deliberate way, you can become **world-class** at it.  
 > Malcolm Gladwell's book Outliers, based on research by psychologist "Anders Ericsson"
 ---  
@@ -16,35 +16,54 @@ If you spend about **10,000 hours** practicing a skill in a focused, deliberate 
 It's not just doing something a lot — it's practicing with intention, pushing your limits.  
 '''
 
-
-about_me = '''
+ABOUT_ME = '''
 Contact [me](www.github.com/h-asadkhanipour)
 '''
 
 
 class TenThousandHoursPython:
     def __init__(self):
+        self.clear_screen()
+        self.print_header()
+        self.load_create_excel_file()
         self.today = datetime.today()
         self.years = [i for i in range(self.today.year, self.today.year + 5)]
+        self.achievement() 
+        self.get_today_report()
+        self.show_progress()
+
+    def clear_screen(self):
+        os.system('cls' if os.__name__ == 'nt' else 'clear')
+    
+    def print_header(self):
+        st.header('******************************************')
+        st.header('***  Ten Thousand hours Python project ***')
+        st.header('******************************************')
+        st.header('')
+    
+    def load_create_excel_file(self):
         try:
             self.excel_file = openpyxl.load_workbook('data/daily_time_log.xlsx')
-            print('Reports Excel file loaded')
+            st.success('Reports Excel file loaded')
+            st.write('******************************************')
+            st.write('')
         except FileNotFoundError:
             dirs = subprocess.check_output('ls -d */', shell=True, text=True)
             if 'data/' not in dirs:
                 subprocess.run(['mkdir', 'data/'])
             self.excel_file = self.create_workbook()
             self.excel_file.save('data/daily_time_log.xlsx')
-            print('New reports Excel file created')
+            st.success('New reports Excel file created')
+            st.write('******************************************')
+            st.write('')
         self.excel_file.save('data/daily_time_log.xlsx')
     
     def achievement(self):
-        years = self.years
         self.first_day = None
         # calculate for each year
         achievement_hours = 0   # accumolates after each year iteration
         self.total_days = 0          # accumolates after each year iteration
-        for year in years:
+        for year in self.years:
             sheet = self.excel_file[f'{year}_report']
             non_empty_cells = []
             # find non-empty cells
@@ -70,7 +89,7 @@ class TenThousandHoursPython:
             sheet['F7'] = sheet['F5'].value / 30                    # months to end
             sheet['F8'] = sheet['F5'].value / 365                   # years to end
             # if this year achieve move hours, then recalculate celebration day
-            if year == years[0]:
+            if year == self.years[0]:
                 sheet['F9'] = (sheet[f'A{last_report_day}'].value + timedelta(sheet['F5'].value)).date()  # last celebration day based on accumolated hours
             elif self.excel_file[f'{year}_report']['F1'].value > self.excel_file[f'{year - 1}_report']['F1'].value:
                 sheet['F9'] = (sheet[f'A{last_report_day}'].value + timedelta(sheet['F5'].value)).date()  # last celebration day based on accumolated hours
@@ -84,25 +103,58 @@ class TenThousandHoursPython:
         self.weeks_to_end = self.days_to_end / 7
         self.months_to_end = self.days_to_end / 30
         self.years_to_end = self.days_to_end / 365
-        self.celebration_day = self.excel_file[f'{max(years)}_report']['F9'].value # last year, last result
+        self.celebration_day = self.excel_file[f'{max(self.years)}_report']['F9'].value # last year, last result
         self.excel_file.save('data/daily_time_log.xlsx')
 
-    def get_user_input(self, study_hours, explanation):
-        self.study_hours = float(study_hours)
-        self.explanation = explanation
+    def get_user_input(self):
+        # get valid study or work hour
+        while True:
+            study_hours = st.slider('How much did you study/work Python?', 0.5, 18.0)
+            if study_hours == '':
+                self.study_hours = ''
+                break
+
+            if float(study_hours) % 0.5 == 0:
+                self.study_hours = float(study_hours)
+                break
+            else:
+                st.error('Study/Work hour should be multiple of 0.5 (half hour)')
+        # get valid user explanation report (max 60 character)
+        while True:
+            explanation = st.text_input('Explain in 79 character what did you do today?', max_chars=79)
+            if explanation == '':
+                self.explanation = ''
+                break
     
-    def today_report(self):
+    def get_today_report(self):
+        self.get_user_input()
         # find excel cell according to today and update its time
-        sheet = self.excel_file[f'{self.today.year}_report']
-        for cell in range(2,368):
-            if str(self.today.date()) in str(sheet[f'A{cell}'].value):
-                # if study hour is None , new value assign to it, else add to previous one 
-                if sheet[f'B{cell}'].value == None:
-                    sheet[f'B{cell}'] = float(self.study_hours)
-                else:
-                    sheet[f'B{cell}'] = sheet[f'B{cell}'].value + float(self.study_hours)
-                sheet[f'C{cell}'] = self.explanation
-        self.excel_file.save('data/daily_time_log.xlsx')
+        if self.study_hours != '' and self.explanation != '':
+            sheet = self.excel_file[f'{self.today.year}_report']
+            for cell in range(2,368):
+                if str(self.today.date()) in str(sheet[f'A{cell}'].value):
+                    # if study hour is None , new value assign to it, else add to previous one 
+                    if sheet[f'B{cell}'].value == None:
+                        sheet[f'B{cell}'] = float(self.study_hours)
+                    else:
+                        sheet[f'B{cell}'] = sheet[f'B{cell}'].value + float(self.study_hours)
+                    sheet[f'C{cell}'] = self.explanation
+            self.excel_file.save('data/daily_time_log.xlsx')
+    
+    def show_progress(self):
+        st.write('')
+        st.write('Your pregress is:', self.achievement_percent)
+        st.write('You have achieved:', self.achievement_hours, 'hours')
+        st.write('')
+        st.write('You have started this project in:', self.first_day.date())
+        st.write('You have Studied/Worked for', self.total_days, 'days')
+        st.write('Your mean Study/Work hours is:', self.mean_hours_per_day)
+        st.write('')
+        st.write('Estimated days to achieve your goal:', self.days_to_end, 'days')
+        st.write('Estimated weeks to achieve your goal:', self.weeks_to_end, 'weeks')
+        st.write('Estimated months to achieve your goal:', self.months_to_end, 'months')
+        st.write('Estimated years to achieve your goal:', self.years_to_end, 'years')
+        st.write('Based on your average study hours, celebration day would be:', self.celebration_day)
 
     def create_workbook(self):
         # create a new workbook
@@ -147,79 +199,8 @@ class TenThousandHoursPython:
         return excel_file
 
 
-def get_valid_user_input():
-    # get valid study hours for today
-    # if you enter several time, you study hour will increase and explanation would be replaced
-    try:
-        study_hours = st.text_input('How much did you study/work Python today? ')
-        if 0<= float(study_hours) <= 18:
-            if float(study_hours) % 0.5 == 0:
-                st.success('Study/Work hours is valid')
-            else:
-                st.error('Study/Work hour should be multiple of 0.5 (half hour)')
-        else:
-            st.error('Study/Work hour is not normal')
-    except ValueError:
-        st.error('Enter a number')
-
-    # get valid user explanation report (max 60 character)
-    explanation = st.text_input('Explain in 60 character what did you do today?')
-    if 0 < len(explanation) <= 60:
-        st.success('Explanation is valid')
-    else:
-        st.error('Explanation should be  less than 60 chatacters')
-    try:
-        if explanation != '':
-            obj.get_user_input(study_hours, explanation)
-            obj.today_report()
-            obj.achievement()
-            st.success('Today\'s report updated')
-    except ValueError:
-        st.error('Enter valid Study/Work hours')
-
-
-try:
-    obj = TenThousandHoursPython()
-    obj.achievement()
-    progress = obj.achievement_percent / 100
-except ZeroDivisionError:
-    st.write(app_title)
-    st.sidebar.header(about_me)
-    st.write('')
-    st.write('')
-    st.warning('This is your first day')
-    st.warning('Ignore the errors, reload after you enter today\'s report')
-    st.warning('Ignore the errors, reload after you enter today\'s report')
-    get_valid_user_input()
-    st.warning('Ignore the errors, reload after you enter today\'s report')
-    st.warning('Ignore the errors, reload after you enter today\'s report')
-    st.warning('This is your first day')
-
-
-st.write(app_title)
-st.sidebar.header(about_me)
-st.write('')
-st.write('')
-get_valid_user_input()
-st.write('')
-st.write('')
-st.write('Your progrss is:')
-col1, col2 = st.columns(2)
-with col1:
-    st.progress(progress) 
-with col2:
-    st.write(f'{progress * 100:.0f} %')
-st.write('You have achieved:', obj.achievement_hours, 'hours')
-st.write('')
-st.write('')
-st.write('You have started this project in:', obj.first_day.date())
-st.write('You have Studied/Worked for', obj.total_days, 'days')
-st.write('Your mean Study/Work hours is:', obj.mean_hours_per_day)
-st.write('')
-st.write('')
-st.write('Estimated days to achieve your goal:', obj.days_to_end, 'days')
-st.write('Estimated weeks to achieve your goal:', obj.weeks_to_end, 'weeks')
-st.write('Estimated months to achieve your goal:', obj.months_to_end, 'months')
-st.write('Estimated years to achieve your goal:', obj.years_to_end, 'years')
-st.write('Based on your average study hours, celebration day would be:' ,obj.celebration_day)
-
+if __name__ == '__main__':
+   st.header(APP_TITLE)
+   TenThousandHoursPython()
+   st.sidebar.button('About me')
+   st.sidebar.write(ABOUT_ME)
