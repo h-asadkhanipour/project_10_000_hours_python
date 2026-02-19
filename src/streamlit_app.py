@@ -17,7 +17,7 @@ It's not just doing something a lot — it's practicing with intention, pushing 
 '''
 
 ABOUT_ME = '''
-Contact [me](www.github.com/h-asadkhanipour)
+Contact [me](https://www.github.com/h-asadkhanipour)
 '''
 
 
@@ -28,8 +28,8 @@ class TenThousandHoursPython:
         self.load_create_excel_file()
         self.today = datetime.today()
         self.years = [i for i in range(self.today.year, self.today.year + 5)]
-        self.achievement() 
         self.get_today_report()
+        self.achievement()
         self.show_progress()
 
     def clear_screen(self):
@@ -106,30 +106,13 @@ class TenThousandHoursPython:
         self.celebration_day = self.excel_file[f'{max(self.years)}_report']['F9'].value # last year, last result
         self.excel_file.save('data/daily_time_log.xlsx')
 
-    def get_user_input(self):
-        # get valid study or work hour
-        while True:
-            study_hours = st.slider('How much did you study/work Python?', 0.5, 18.0)
-            if study_hours == '':
-                self.study_hours = ''
-                break
-
-            if float(study_hours) % 0.5 == 0:
-                self.study_hours = float(study_hours)
-                break
-            else:
-                st.error('Study/Work hour should be multiple of 0.5 (half hour)')
-        # get valid user explanation report (max 60 character)
-        while True:
-            explanation = st.text_input('Explain in 79 character what did you do today?', max_chars=79)
-            if explanation == '':
-                self.explanation = ''
-                break
-    
     def get_today_report(self):
-        self.get_user_input()
+        # get valid study or work hour
+        self.study_hours = st.number_input('How much did you study/work Python?', 1, 18)
+        # get valid user explanation report (max 60 character)
+        self.explanation = st.text_input('Explain in 79 character what did you do today?', max_chars=79)
         # find excel cell according to today and update its time
-        if self.study_hours != '' and self.explanation != '':
+        if self.explanation != '':
             sheet = self.excel_file[f'{self.today.year}_report']
             for cell in range(2,368):
                 if str(self.today.date()) in str(sheet[f'A{cell}'].value):
