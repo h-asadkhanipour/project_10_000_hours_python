@@ -21,6 +21,7 @@ class TenTousandHours():
         if self.last_report == self.today:
             print('>>> Your reports is update <<<')
             print(f'Today is: {self.today}')
+            # TODO: add function that asks if user want to update today report?
         elif self.last_report == self.yesterday:
             self.get_report()
         else:
