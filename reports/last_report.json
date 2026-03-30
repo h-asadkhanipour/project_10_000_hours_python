@@ -1,14 +1,14 @@
 {
-    "last_report_date": "2026-03-15",
+    "last_report_date": "2026-03-30",
     "first_day": "2026-02-07",
-    "total_days": 30,
-    "achievement_hours": 101.5,
-    "achievement_percent": 1.015,
-    "mean_hours_per_day": 3.3833333333333333,
-    "hours_to_end": 9898.5,
-    "days_to_end": 2925.665024630542,
-    "weeks_to_end": 417.95214637579176,
-    "months_to_end": 97.52216748768474,
-    "years_to_end": 8.015520615426142,
-    "celebration_day": "2034-03-18"
+    "total_days": 36,
+    "achievement_hours": 112.0,
+    "achievement_percent": 1.1199999999999999,
+    "mean_hours_per_day": 3.111111111111111,
+    "hours_to_end": 9888.0,
+    "days_to_end": 3178.285714285714,
+    "weeks_to_end": 454.0408163265306,
+    "months_to_end": 105.94285714285714,
+    "years_to_end": 8.707632093933464,
+    "celebration_day": "2034-12-11"
 }

@@ -20,6 +20,8 @@ class Achievement():
             self.get_last_report_date()
             if self.last_report_date in [self.yesterday, self.today]:
                 self.use_last_json_progress()
+            else:
+                self.calculate_database_progress()
         else:
             self.calculate_database_progress()
 
