@@ -7,81 +7,124 @@ from typing import Protocol
 from sev_seg_display import SevSeg
 
 
+DAYS_TO_IGNORE = ['holiday', 'sick day',]
+
+if os.getcwd().split('/')[-1] == 'project_10_000_hours_python':
+    REPORTS_DIR = 'reports_data'
+elif os.getcwd().split('/')[-1] == 'src':
+    REPORTS_DIR = '../reports_data'
+else:
+    print('Maybe you change projects directory name.\n go to src/ and run again.')
+    os._exit()
+
+
 def main():
-    yesterday = datetime.today().date() - timedelta(1)
-    json_file = JsonUpdateProgress()
-    if json_file.last_report_date == yesterday:
-        achievement_hours = json_file.calculate_achievement_hours()
-        total_days = json_file.calculate_total_days()
+    # check whether daily_report are update or not
+    if check_update():
+        today = datetime.today().date()
+        yesterday = datetime.today().date() - timedelta(1)
+        if os.path.exists(f'{REPORTS_DIR}/last_report.json'):
+            json_file = JsonUpdateProgress()
+            if json_file.last_report_date in [today, yesterday]:
+                achievement_hours = json_file.achievement_hours
+                total_days = json_file.total_days
+        else:
+            sqlite_file = SqliteUpdateProgress()
+            achievement_hours = sqlite_file.achievement_hours
+            total_days = sqlite_file.total_days
+        # calculate last progress
+        progress = Progress()
+        progress.calculate(achievement_hours, total_days)
+        # save last progress to json
+        progress.save_to_json()
+        # show last progress
+        progress.show_progress()
+    else:
+        print('Reports are not update')
+        user_input = input(
+            'Do you want to see last report achievements? (Press y/n): ').strip().lower()
+        while True:
+            if user_input in ['y', 'n']:
+                break
+        if user_input == 'y':
+            progress = Progress()
+            progress.get_from_last_report()
+            progress.show_progress()
+
+
+def check_update():
+    # load daily_report.json file
+    with open(f'{REPORTS_DIR}/daily_reports.json') as file:
+        daily_reports = json.load(file)
+    # get today as a string
+    today = datetime.today().date().isoformat()
+    # check today has a report or not
+    if daily_reports[f'{today}'] != None:
+        return True
+    return False
 
 
 class UpdateProgress(Protocol):
     def __init__(self):
         pass
 
-    def calculate_achievement_hours(self):
-        # add yesterday and today from daily_reports.json
-        pass
-
-    def calculate_total_days(self):
-        # yesterday's total days + 1
+    def calculate_achievement_hours_total_days(self):
         pass
 
 
 class JsonUpdateProgress():
+    """This class is used when last report was yesterday"""
+
     def __init__(self):
-        with open('reports_data/last_report.json', mode='r') as file:
+        # open json file
+        with open(f'{REPORTS_DIR}/last_report.json', mode='r') as file:
             self.last_report = json.load(file)
+        # get last report date
         last_report_date = self.last_report['last_report_date']
+        # convert string to date object
         self.last_report_date = datetime.strptime(
             last_report_date, "%Y-%m-%d").date()
+        # get achievement hours and total days
+        self.achievement_hours = self.last_report['achievement_hours']
+        self.total_days = self.last_report['total_days']
+        # update achievement hours and total days
+        if self.last_report_date == (datetime.today().date() - timedelta(1)):
+            self.calculate_achievement_hours_total_days()
 
-    def calculate_achievement_hours(self):
-        pass
-
-    def calculate_total_days(self):
-        pass
+    def calculate_achievement_hours_total_days(self):
+        # convert today's date object to string
+        today = datetime.today().date().isoformat()
+        # open daily_reports.json
+        with open(f'{REPORTS_DIR}/daily_reports.json', mode='r') as file:
+            json_file = json.load(file)
+        # get study hours of today
+        today_study_hours = json_file[f'{today}']['study_work_hours']
+        today_explanation = json_file[f'{today}']['explanation']
+        # ignore holidays
+        if today_explanation not in DAYS_TO_IGNORE:
+            self.achievement_hours += today_study_hours
+            self.total_days += 1
 
 
 class SqliteUpdateProgress():
     def __init__(self):
         # connect to database
-        results = self.conn.execute(
+        conn = sqlite3.connect(
+            f'{REPORTS_DIR}/daily_reports.sqlite', isolation_level=None)
+        self.results = conn.execute(
             'select * from report where study_work_hours != "None"').fetchall()
-        # calculate total number of days (except holidays) and achievement hours
-        self.first_day = results[0][0]
+        # calculate achievement hours and total days
+        self.calculate_achievement_hours_total_days()
+
+    def calculate_achievement_hours_total_days(self):
         total_days = 0
         achievement_hours = 0
-        for result in results:
-            if result[2] != 'holiday':
+        for result in self.results:
+            if result[2] not in DAYS_TO_IGNORE:
                 total_days += 1
                 achievement_hours += result[1]
-
-    def calculate_achievement_hours(self):
-        pass
-
-    def calculate_total_days(self):
-        pass
-
-    def use_last_json_progress(self):
-        # load json file
-        with open('reports/last_report.json', mode='r') as file:
-            last_report = json.load(file)
-        # check if last report is for today or for yesterday
-        if self.last_report_date == self.yesterday:
-            # get today report from database
-            date = datetime.today().date().isoformat()
-            today_report_hours = self.conn.execute(
-                'select * from report where date = (?)', [date]).fetchall()[0][1]
-            # use last report to set achievement hours and total days
-            achievement_hours = last_report['achievement_hours'] + \
-                today_report_hours
-            self.total_days = last_report['total_days'] + 1
-        else:
-            achievement_hours = last_report['achievement_hours']
-            self.total_days = last_report['total_days']
-        # get first day from json
-        self.first_day = last_report['first_day']
+        self.achievement_hours = achievement_hours
+        self.total_days = total_days
 
 
 class Progress():
@@ -99,11 +142,10 @@ class Progress():
         self.celebration_day = datetime.today().date() + timedelta(days=self.days_to_end)
 
     def save_to_json(self):
-        # connect to database
-        results = self.conn.execute(
-            'select * from report where study_work_hours != "None"').fetchall()
-        # calculate total number of days (except holidays) and achievement hours
-        self.first_day = results[0][0]
+        # get first day from daily_reports.json
+        with open(f'{REPORTS_DIR}/daily_reports.json') as file:
+            daily_reports = json.load(file)
+        self.first_day = next(iter(daily_reports))
         # save it to json
         self.last_report_date = datetime.today().date().isoformat()
         last_report = {
@@ -120,8 +162,26 @@ class Progress():
             'years_to_end': self.years_to_end,
             'celebration_day': self.celebration_day.isoformat(),
         }
-        with open('reports/last_report.json', mode='w') as file:
+        with open(f'{REPORTS_DIR}/last_report.json', mode='w') as file:
             json.dump(last_report, file, indent=4)
+
+    def get_from_last_report(self):
+        # load json file
+        with open(f'{REPORTS_DIR}/last_report.json') as file:
+            last_report = json.load(file)
+        # get items of last report
+        self.last_report_date = last_report['last_report_date']
+        self.first_day = last_report['first_day']
+        self.total_days = last_report['total_days']
+        self.achievement_hours = last_report['achievement_hours']
+        self.achievement_percent = last_report['achievement_percent']
+        self.mean_hours_per_day = last_report['mean_hours_per_day']
+        self.hours_to_end = last_report['hours_to_end']
+        self.days_to_end = last_report['days_to_end']
+        self.weeks_to_end = last_report['weeks_to_end']
+        self.months_to_end = last_report['months_to_end']
+        self.years_to_end = last_report['years_to_end']
+        self.celebration_day = last_report['celebration_day']
 
     def show_progress(self):
         print()
@@ -154,4 +214,8 @@ class Progress():
 
 
 if __name__ == '__main__':
-    Achievement()
+    try:
+        os.system('cls' if os.__name__ == 'nt' else 'clear')
+        main()
+    except KeyboardInterrupt:
+        os._exit(0)
