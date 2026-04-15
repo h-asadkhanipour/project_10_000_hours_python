@@ -139,7 +139,8 @@ class Progress():
         self.weeks_to_end = self.days_to_end / 7
         self.months_to_end = self.days_to_end / 30
         self.years_to_end = self.days_to_end / 365
-        self.celebration_day = datetime.today().date() + timedelta(days=self.days_to_end)
+        celebration_day = datetime.today().date() + timedelta(days=self.days_to_end)
+        self.celebration_day = celebration_day.isoformat()
 
     def save_to_json(self):
         # get first day from daily_reports.json
@@ -208,7 +209,7 @@ class Progress():
               f'{self.years_to_end:.0f}', 'years')
         print('Based on your average study hours, celebration day would be:')
         print()
-        num1, num2, num3 = self.celebration_day.isoformat().split(sep='-')
+        num1, num2, num3 = self.celebration_day.split(sep='-')
         SevSeg(num1, num2, num3, separator='/')
         print()
 
