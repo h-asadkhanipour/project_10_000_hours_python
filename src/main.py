@@ -41,12 +41,13 @@ def days_need_report():
             break
     # convert first day to date object
     first_day_date = datetime.strptime(
-        first_day_date, "%Y-%m-%d").date() - timedelta(1)
+        first_day_date, "%Y-%m-%d").date()
+    first_day_date_to_show = first_day_date - timedelta(1)
     today = datetime.today().date()
     # get number of days that don't have report
-    days_without_reports = (today - first_day_date).days
+    days_without_reports = (today - first_day_date).days + 1
     print(
-        f'From {first_day_date} to {today}, there is {days_without_reports} days without report')
+        f'From {first_day_date_to_show} to {today}, there is {days_without_reports} days without report')
     return first_day_date, days_without_reports
 
 
@@ -64,14 +65,14 @@ def decide_about_get_report(first_day_date, days_without_reports):
                 if input_validation.YesNoValidation().validate(msg):
                     study_hours, explanation = get_report(date)
                     save.JsonSaveReport().save(date, study_hours, explanation)
-                    # save.ExcelSaveReport().save(date, study_hours, explanation)
-                    # save.SQLiteDatabaseSaveReport().save(date, study_hours, explanation)
+                    save.ExcelSaveReport().save(date, study_hours, explanation)
+                    save.SQLiteDatabaseSaveReport().save(date, study_hours, explanation)
                     print(f'Report of {date} is done')
             else:
                 study_hours, explanation = get_report(date)
                 save.JsonSaveReport().save(date, study_hours, explanation)
-                # save.ExcelSaveReport().save(date, study_hours, explanation)
-                # save.SQLiteDatabaseSaveReport().save(date, study_hours, explanation)
+                save.ExcelSaveReport().save(date, study_hours, explanation)
+                save.SQLiteDatabaseSaveReport().save(date, study_hours, explanation)
                 print(f'Report of {date} is done')
 
 

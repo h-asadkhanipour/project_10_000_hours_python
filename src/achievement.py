@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import Protocol
 
 from sev_seg_display import SevSeg
+import input_validation
 
 
 DAYS_TO_IGNORE = ['holiday', 'sick day',]
@@ -41,12 +42,19 @@ def main():
         progress.show_progress()
     else:
         print('Reports are not update')
-        user_input = input(
-            'Do you want to see last report achievements? (Press y/n): ').strip().lower()
-        while True:
-            if user_input in ['y', 'n']:
-                break
-        if user_input == 'y':
+        msg = 'Do you want to update achievement reports? (Press y/n): '
+        if input_validation.YesNoValidation().validate(msg):
+            sqlite_file = SqliteUpdateProgress()
+            achievement_hours = sqlite_file.achievement_hours
+            total_days = sqlite_file.total_days
+            # calculate last progress
+            progress = Progress()
+            progress.calculate(achievement_hours, total_days)
+            # save last progress to json
+            progress.save_to_json()
+            # show last progress
+            progress.show_progress()
+        else:
             progress = Progress()
             progress.get_from_last_report()
             progress.show_progress()
@@ -147,8 +155,14 @@ class Progress():
         with open(f'{REPORTS_DIR}/daily_reports.json') as file:
             daily_reports = json.load(file)
         self.first_day = next(iter(daily_reports))
+        # find last reports date from daily_reports.json
+        for date in daily_reports:
+            if daily_reports[date] == None:
+                last_report_date = (datetime.strptime(
+                    date, '%Y-%m-%d').date() - timedelta(1)).isoformat()
+                break
         # save it to json
-        self.last_report_date = datetime.today().date().isoformat()
+        self.last_report_date = last_report_date
         last_report = {
             'last_report_date': self.last_report_date,
             'first_day': self.first_day,
@@ -161,7 +175,7 @@ class Progress():
             'weeks_to_end': self.weeks_to_end,
             'months_to_end': self.months_to_end,
             'years_to_end': self.years_to_end,
-            'celebration_day': self.celebration_day.isoformat(),
+            'celebration_day': self.celebration_day,
         }
         with open(f'{REPORTS_DIR}/last_report.json', mode='w') as file:
             json.dump(last_report, file, indent=4)

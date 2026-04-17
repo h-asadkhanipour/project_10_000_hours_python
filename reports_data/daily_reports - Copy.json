@@ -248,24 +248,33 @@
         "explanation": "python book 3, network book 1, python book 5, django book 1"
     },
     "2026-04-10": {
-        "study_hours": 1.5,
+        "study_work_hours": 1.5,
         "explanation": "docker course 2"
     },
     "2026-04-11": {
-        "study_hours": 4.0,
+        "study_work_hours": 4.0,
         "explanation": "docker course 2, linux book 5"
     },
     "2026-04-12": {
-        "study_hours": 0.0,
+        "study_work_hours": 0.0,
         "explanation": "rest"
     },
     "2026-04-13": {
-        "study_hours": 6.5,
+        "study_work_hours": 6.5,
         "explanation": "project_10_000_hours_python, linux book 5"
     },
-    "2026-04-14": null,
-    "2026-04-15": null,
-    "2026-04-16": null,
+    "2026-04-14": {
+        "study_work_hours": 8.0,
+        "explanation": "project_10_000_hours_python V3"
+    },
+    "2026-04-15": {
+        "study_work_hours": 2.5,
+        "explanation": "linux book 5"
+    },
+    "2026-04-16": {
+        "study_work_hours": 2.0,
+        "explanation": "network book 1, python book 5 "
+    },
     "2026-04-17": null,
     "2026-04-18": null,
     "2026-04-19": null,
